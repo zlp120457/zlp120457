@@ -4,7 +4,7 @@
 
 1. **创建GitHub仓库Fork**
    - 访问 [dreamhartley/gemini-proxy-panel](https://github.com/dreamhartley/gemini-proxy-panel)
-   - 创建Fork时确保使用自定义的仓库名称，**不要包含** `gemini proxy panel`
+   - 创建Fork时确保使用自定义的仓库名称，**不要包含** `gemini proxy panel`或`hajimi`等关键词
 
 2. **启用工作流**
    - 在上方Actions标签栏，点击`I understand my workflows, go ahead and enable them`按钮
