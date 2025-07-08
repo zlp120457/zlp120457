@@ -27,15 +27,10 @@
    * 添加以下 Secrets：
      * `ADMIN_PASSWORD`: 设置管理面板的登录密码。\
      ![](image/4.4.jpg)
-     * `SESSION_SECRET_KEY`: 设置一个长且随机的会话密钥。\
-     ![](image/4.5.jpg)
      * `GITHUB_PROJECT`: 填入你**自己的** GitHub 仓库路径，格式为 `your-username/your-repo-name`。\
      ![](image/4.1.jpg)
      * `GITHUB_PROJECT_PAT`: 填入你创建的 GitHub PAT。\
      ![](image/4.2.jpg)
-     * (可选)`CF_GATEWAY`: 填入`1`启用脚本默认提供的Cloudflare AI Gateway网关转发请求，或输入您自己网关链接。\
-     详情参考: [CF_GATEWAY介绍](../../Usage/CF_GATEWAY.md)\
-     ![](image/4.7.jpg)
      * Secrets配置完成。
      ![](image/5.0.jpg)
 
