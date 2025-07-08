@@ -13,7 +13,7 @@
    
    * 访问 Hugging Face Space 页面，点击新建一个 Space。\
    ![](image/1.0.jpg)
-   * 在`Space name`处随意填写一个名称，例如`gemini-proxy-panel`\
+   * 在`Space name`处随意填写一个自定义名称，请不要包含`gemini proxy panel`或`hajimi`等关键词\
    ![](image/2.0.jpg)
    * 选择 "Docker" 作为 Space SDK。\
    ![](image/2.1.jpg)
