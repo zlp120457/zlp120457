@@ -2,6 +2,8 @@
 
 此部署方式利用 Hugging Face Space 的 Docker 环境运行，并**强制要求启用 GitHub 同步**功能以实现数据持久化。
 
+> 本项目被Hugging Face标记，如果您在使用中存在问题，例如卡Building或者停止运行，请参考[Hugging Face部署出现问题的应对](Hugging%20Face%20Space部署-fork说明.md)
+
 1. **准备 GitHub 仓库和 PAT**:
    
    * 你需要一个**自己的** GitHub 仓库来存储同步的数据。建议使用私有仓库。
@@ -31,22 +33,16 @@
      ![](image/4.1.jpg)
      * `GITHUB_PROJECT_PAT`: 填入你创建的 GitHub PAT。\
      ![](image/4.2.jpg)
-     * `GITHUB_ENCRYPT_KEY`: 设置一个用于加密同步数据的密钥，**必须是 32 位或更长的字符串**。\
-     ![](image/4.3.jpg)
-     * (可选)`KEEPALIVE`: 填入`1`启用心跳机制，以实现假流式传输。\
-     详情参考: [KEEPALIVE模式介绍](../../Usage/KEEPALIVE.md)\
-     ![](image/4.6.jpg)
      * (可选)`CF_GATEWAY`: 填入`1`启用脚本默认提供的Cloudflare AI Gateway网关转发请求，或输入您自己网关链接。\
      详情参考: [CF_GATEWAY介绍](../../Usage/CF_GATEWAY.md)\
      ![](image/4.7.jpg)
-     * (可选)`VERTEX`: 填入JSON格式的服务账号API密钥可以启用Vertex代理功能。\
-     详情参考: [Vertex代理配置](../../Usage/Vertex/Vertex代理配置.md)\
-     ![](image/4.8.jpg)
-     * Secrets配置完成。\
+     * Secrets配置完成。
      ![](image/5.0.jpg)
 
 4. **创建 Dockerfile**:
    
+   > 本项目被Hugging Face标记，如果您在使用中存在问题，例如卡Building或者停止运行，请参考[Hugging Face部署出现问题的应对](Hugging%20Face%20Space部署-fork说明.md)
+
    * 在 Hugging Face Space 的 "Files" 标签页中，点击 "Add file" -> "Create new file"。\
    ![](image/6.0.jpg)
    * 将文件名设置为 `Dockerfile`。
