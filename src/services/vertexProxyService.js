@@ -210,8 +210,8 @@ async function initializeVertexCredentials() {
     }
 }
 
-// Initialize credentials when the module loads
-initializeVertexCredentials();
+// Don't initialize immediately when module loads - will be initialized after DB is ready
+// initializeVertexCredentials();
 
 
 /**
@@ -1121,5 +1121,6 @@ module.exports = {
     proxyVertexChatCompletions,
     getVertexSupportedModels,
     isVertexEnabled, // Export check function
-    reinitializeWithDatabaseConfig // Export reinitialization function
+    reinitializeWithDatabaseConfig, // Export reinitialization function
+    initializeVertexCredentials // Export initialization function for delayed init
 };

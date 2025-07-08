@@ -76,6 +76,15 @@ const db = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CR
         console.log('Continuing with local database...');
       }
     }
+    
+    // Initialize Vertex service after database is ready (including GitHub sync)
+    try {
+      const vertexService = require('../services/vertexProxyService');
+      console.log('Initializing Vertex AI service after database setup...');
+      await vertexService.initializeVertexCredentials();
+    } catch (err) {
+      console.error('Failed to initialize Vertex service:', err.message);
+    }
   }
 });
 

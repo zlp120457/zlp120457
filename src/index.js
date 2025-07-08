@@ -1,16 +1,16 @@
 // Load environment variables from .env file FIRST
 require('dotenv').config();
 
-// Manually load VERTEX from .env before doing anything else that might need it
-const vertexService = require('./services/vertexProxyService'); // Imports and triggers manual load
-
 const express = require('express');
 const path = require('path');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 
 // Import the database connection and sync function (this will also trigger initialization)
-const { db } = require('./db'); 
+const { db } = require('./db');
+
+// Import Vertex service but don't initialize yet - will be done after DB is ready
+const vertexService = require('./services/vertexProxyService');
 
 // Import route handlers
 const authRoutes = require('./routes/auth');
