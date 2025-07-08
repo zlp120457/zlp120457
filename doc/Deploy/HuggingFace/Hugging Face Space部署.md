@@ -45,6 +45,11 @@
      ```dockerfile
      FROM dreamhartley705/gemini-proxy-panel:huggingface
      ```
+     或Fork仓库创建的镜像地址
+     
+     ```dockerfile
+     FROM ghcr.io/GitHub用户名/Fork仓库名:latest
+     ```
    * 点击 "Commit new file"。
    ![](image/6.1.jpg)
 5. **启动和访问**:
