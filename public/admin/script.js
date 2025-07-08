@@ -1318,8 +1318,11 @@ async function renderGeminiKeys(keys) {
              return;
         }
 
-        // Split input, supporting comma-separated keys
-        const geminiKeys = geminiKeyInput.split(',').map(key => key.trim()).filter(key => key !== '');
+        // Split input, supporting comma-separated keys (both English and Chinese commas) and line-separated keys
+        const geminiKeys = geminiKeyInput
+            .split(/[,，\n\r]+/)  // Split by English comma, Chinese comma, newline, or carriage return
+            .map(key => key.trim())
+            .filter(key => key !== '');
         
         // Check if there are any keys to process
         if (geminiKeys.length === 0) {
