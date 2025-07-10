@@ -10,12 +10,6 @@ const proxyPool = require('../utils/proxyPool'); // Import the new proxy pool mo
 
 // Base Gemini API URL
 const BASE_GEMINI_URL = process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com';
-// Cloudflare Gateway base path
-const CF_GATEWAY_BASE = 'https://gateway.ai.cloudflare.com/v1';
-// Project ID regex pattern - 32 character hex string
-const PROJECT_ID_REGEX = /^[0-9a-f]{32}$/i;
-// Default Cloudflare Gateway project ID (Replace with your actual default if needed)
-const DEFAULT_PROJECT_ID = 'db16589aa22233d56fe69a2c3161fe3c';
 
 async function proxyChatCompletions(openAIRequestBody, workerApiKey, stream, thinkingBudget, keepAliveCallback = null) {
     const requestedModelId = openAIRequestBody?.model;
@@ -86,7 +80,6 @@ async function proxyChatCompletions(openAIRequestBody, workerApiKey, stream, thi
         // --- Retry Loop ---
         for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
             let selectedKey;
-            let forceNewKey = false; // Flag to force getting a new key on retry
             try {
                 // 1. Get Key inside the loop for each attempt
                 // If it's a search model, use the original model ID to get the API key
@@ -170,61 +163,10 @@ async function proxyChatCompletions(openAIRequestBody, workerApiKey, stream, thi
                 // 4. Prepare and Send Request to Gemini
                 // If keepalive is enabled and original request was streaming, use non-streaming API
                 const apiAction = actualStreamMode ? 'streamGenerateContent' : 'generateContent';
-                
-                // Determine Base URL based on CF_GATEWAY environment variable
-                let baseUrl = BASE_GEMINI_URL; // Default to standard Gemini URL
-                const cfGateway = process.env.CF_GATEWAY;
 
-                // Return default URL if CF_GATEWAY is not set
-                if (!cfGateway) {
-                    // Use default Gemini API URL (already set)
-                } else {
-                    // Handle case 1: CF_GATEWAY = "1" (use default project ID)
-                    if (cfGateway === '1') {
-                        // Validate default project ID format
-                        if (PROJECT_ID_REGEX.test(DEFAULT_PROJECT_ID)) {
-                            // Only use default Cloudflare Gateway if project ID format is valid
-                            baseUrl = `${CF_GATEWAY_BASE}/${DEFAULT_PROJECT_ID}/gemini/google-ai-studio`;
-                            console.log(`Using default Cloudflare Gateway: ${baseUrl}`);
-                        } else {
-                             console.warn(`Invalid DEFAULT_PROJECT_ID format: ${DEFAULT_PROJECT_ID}. Falling back to default Gemini URL.`);
-                        }
-                        // If invalid, fall back to default Gemini API URL (already set)
-                    } else {
-                        // Handle case 2: CF_GATEWAY contains projectId/gatewayName
-                        try {
-                            // Remove trailing slashes
-                            let gatewayValue = cfGateway.replace(/\/+$/, '');
-
-                            // Try to extract projectId/gatewayName pattern from anywhere in the string
-                            // This will work for both full URLs and direct format strings like "projectId/gatewayName"
-                            const pattern = /([0-9a-f]{32})\/([^\/\s]+)/i;
-                            const matches = gatewayValue.match(pattern);
-
-                            if (matches && matches.length >= 3) {
-                                const projectId = matches[1];
-                                const gatewayName = matches[2];
-
-                                if (PROJECT_ID_REGEX.test(projectId)) {
-                                    baseUrl = `${CF_GATEWAY_BASE}/${projectId}/${gatewayName}/google-ai-studio`;
-                                    console.log(`Using custom Cloudflare Gateway: ${baseUrl}`);
-                                } else {
-                                     console.warn(`Invalid Project ID format found in CF_GATEWAY: ${projectId}. Falling back to default Gemini URL.`);
-                                }
-                            } else {
-                                console.warn(`CF_GATEWAY value "${cfGateway}" does not match expected format (e.g., 'projectId/gatewayName' or full URL). Falling back to default Gemini URL.`);
-                            }
-                        } catch (error) {
-                            console.error('Error parsing CF_GATEWAY value:', error);
-                            // Fall back to default URL on error (already set)
-                        }
-                    }
-                    // For any other value or format issue of CF_GATEWAY, keep using default Gemini API URL
-                }
-
-                // Build complete API URL using the determined base URL
+                // Build complete API URL using the base URL
                 // Use actualModelId instead of requestedModelId with -search suffix
-                const geminiUrl = `${baseUrl}/v1beta/models/${actualModelId}:${apiAction}`;
+                const geminiUrl = `${BASE_GEMINI_URL}/v1beta/models/${actualModelId}:${apiAction}`;
 
                 const geminiRequestHeaders = {
                     'Content-Type': 'application/json',
@@ -350,8 +292,6 @@ async function proxyChatCompletions(openAIRequestBody, workerApiKey, stream, thi
                             if (useKeepAlive && keepAliveCallback) {
                                 console.log(`KEEPALIVE: Continuing heartbeat during empty response retry attempt ${attempt + 1}`);
                             }
-                            // Skip this key on next attempt
-                            forceNewKey = true;
                             continue; // Continue to the next attempt
                         }
 
