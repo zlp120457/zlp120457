@@ -111,7 +111,7 @@ router.post('/chat/completions', async (req, res, next) => {
 
         // KEEPALIVE mode setup - prepare heartbeat callback if needed
         let keepAliveCallback = null;
-        const keepAliveEnabled = String(await configService.getSetting('keepalive', process.env.KEEPALIVE || '0')) === '1';
+        const keepAliveEnabled = String(await configService.getSetting('keepalive', '0')) === '1';
         const isSafetyEnabled = await configService.getWorkerKeySafetySetting(workerApiKey);
         const useKeepAlive = keepAliveEnabled && stream && !isSafetyEnabled;
 

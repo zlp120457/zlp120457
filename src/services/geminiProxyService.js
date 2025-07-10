@@ -35,11 +35,11 @@ async function proxyChatCompletions(openAIRequestBody, workerApiKey, stream, thi
         [modelsConfig, isSafetyEnabled, MAX_RETRIES, keepAliveEnabled] = await Promise.all([
             configService.getModelsConfig(),
             configService.getWorkerKeySafetySetting(workerApiKey), // Get safety setting for this worker key
-            configService.getSetting('max_retry', process.env.MAX_RETRY || '3').then(val => parseInt(val) || 3),
-            configService.getSetting('keepalive', process.env.KEEPALIVE || '0').then(val => String(val) === '1')
+            configService.getSetting('max_retry', '3').then(val => parseInt(val) || 3),
+            configService.getSetting('keepalive', '0').then(val => String(val) === '1')
         ]);
 
-        console.log(`Using MAX_RETRIES: ${MAX_RETRIES} (from database or environment variable)`);
+        console.log(`Using MAX_RETRIES: ${MAX_RETRIES} (from database)`);
         console.log(`KEEPALIVE settings - keepAliveEnabled: ${keepAliveEnabled}, stream: ${stream}, isSafetyEnabled: ${isSafetyEnabled}`);
 
         // Check if web search functionality needs to be added

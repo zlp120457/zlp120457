@@ -564,9 +564,9 @@ router.post('/vertex-config/test', async (req, res, next) => {
 router.route('/system-settings')
     .get(async (req, res, next) => {
         try {
-            // Get settings from database, fallback to environment variables
-            const keepalive = await configService.getSetting('keepalive', process.env.KEEPALIVE || '0');
-            const maxRetry = await configService.getSetting('max_retry', process.env.MAX_RETRY || '3');
+            // Get settings from database
+            const keepalive = await configService.getSetting('keepalive', '0');
+            const maxRetry = await configService.getSetting('max_retry', '3');
             const webSearch = await configService.getSetting('web_search', '0');
 
             // Ensure consistent data types
