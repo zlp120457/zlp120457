@@ -1,6 +1,18 @@
-const { db, syncToGitHub } = require('../db');
+const dbModule = require('../db');
 
 // --- Helper Functions for DB Interaction ---
+
+/**
+ * Helper function to get database instance
+ * @returns {object} Database instance
+ */
+const getDbInstance = () => {
+    const db = dbModule.db;
+    if (!db) {
+        throw new Error('Database not initialized');
+    }
+    return db;
+};
 
 /**
  * Helper function to run a single SQL query with parameters.
@@ -11,6 +23,7 @@ const { db, syncToGitHub } = require('../db');
  */
 const runDb = (sql, params = []) => {
     return new Promise((resolve, reject) => {
+        const db = getDbInstance();
         db.run(sql, params, function (err) { // Use function() to access this context
             if (err) {
                 console.error('Database run error:', err.message, 'SQL:', sql, 'Params:', params);
@@ -31,6 +44,7 @@ const runDb = (sql, params = []) => {
  */
 const getDb = (sql, params = []) => {
     return new Promise((resolve, reject) => {
+        const db = getDbInstance();
         db.get(sql, params, (err, row) => {
             if (err) {
                 console.error('Database get error:', err.message, 'SQL:', sql, 'Params:', params);
@@ -51,6 +65,7 @@ const getDb = (sql, params = []) => {
  */
 const allDb = (sql, params = []) => {
     return new Promise((resolve, reject) => {
+        const db = getDbInstance();
         db.all(sql, params, (err, rows) => {
             if (err) {
                 console.error('Database all error:', err.message, 'SQL:', sql, 'Params:', params);
@@ -136,7 +151,7 @@ async function setSetting(key, value, skipSync = false, useTransaction = false) 
             
             // Sync updates to GitHub (unless skipped)
             if (!skipSync) {
-                await syncToGitHub();
+                await dbModule.syncToGitHub();
             }
         }
     } catch (error) {
@@ -205,7 +220,7 @@ async function setModelConfig(modelId, category, dailyQuota, individualQuota) {
         await runDb('COMMIT');
         
         // Sync updates to GitHub (outside transaction)
-        await syncToGitHub();
+        await dbModule.syncToGitHub();
     } catch (error) {
         // Rollback on error
         await runDb('ROLLBACK');
@@ -232,7 +247,7 @@ async function deleteModelConfig(modelId) {
         await runDb('COMMIT');
         
         // Sync updates to GitHub (outside transaction)
-        await syncToGitHub();
+        await dbModule.syncToGitHub();
     } catch (error) {
         await runDb('ROLLBACK');
         throw error;
@@ -283,7 +298,7 @@ async function setCategoryQuotas(proQuota, flashQuota) {
         await runDb('COMMIT');
         
         // Sync updates to GitHub outside transaction
-        await syncToGitHub();
+        await dbModule.syncToGitHub();
     } catch (error) {
         // Rollback on error
         await runDb('ROLLBACK');
@@ -341,7 +356,7 @@ async function addWorkerKey(apiKey, description = '') {
         await runDb('COMMIT');
         
         // Sync updates to GitHub (outside transaction)
-        await syncToGitHub();
+        await dbModule.syncToGitHub();
     } catch (err) {
         // Rollback on error
         await runDb('ROLLBACK');
@@ -374,7 +389,7 @@ async function updateWorkerKeySafety(apiKey, safetyEnabled) {
         await runDb('COMMIT');
         
         // Sync updates to GitHub (outside transaction)
-        await syncToGitHub();
+        await dbModule.syncToGitHub();
     } catch (error) {
         await runDb('ROLLBACK');
         throw error;
@@ -401,7 +416,7 @@ async function deleteWorkerKey(apiKey) {
         await runDb('COMMIT');
         
         // Sync updates to GitHub (outside transaction)
-        await syncToGitHub();
+        await dbModule.syncToGitHub();
     } catch (error) {
         await runDb('ROLLBACK');
         throw error;
@@ -441,7 +456,7 @@ async function setGitHubConfig(repo, token, dbPath = './database.db', encryptKey
         await runDb('COMMIT');
         
         // Sync updates to GitHub outside transaction
-        await syncToGitHub();
+        await dbModule.syncToGitHub();
     } catch (error) {
         // Rollback on error
         await runDb('ROLLBACK');

@@ -4,7 +4,7 @@ const configService = require('../services/configService');
 const geminiKeyService = require('../services/geminiKeyService');
 const vertexProxyService = require('../services/vertexProxyService');
 const fetch = require('node-fetch');
-const { syncToGitHub } = require('../db');
+const dbModule = require('../db');
 const proxyPool = require('../utils/proxyPool'); // Import the proxy pool module
 const router = express.Router();
 
@@ -597,10 +597,10 @@ router.route('/system-settings')
                 return res.status(400).json({ error: 'WEB_SEARCH must be "0" or "1"' });
             }
 
-            // Save to database
-            await configService.setSetting('keepalive', keepalive);
-            await configService.setSetting('max_retry', maxRetryNum.toString());
-            await configService.setSetting('web_search', webSearch);
+            // Save to database (skip sync for first two, sync on the last one)
+            await configService.setSetting('keepalive', keepalive, true); // Skip sync
+            await configService.setSetting('max_retry', maxRetryNum.toString(), true); // Skip sync
+            await configService.setSetting('web_search', webSearch); // Trigger sync on last setting
 
             res.json({
                 success: true,

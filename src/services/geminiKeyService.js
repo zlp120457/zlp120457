@@ -1,4 +1,4 @@
-const { db, syncToGitHub } = require('../db');
+const dbModule = require('../db');
 const configService = require('./configService'); // Use configService for DB helpers and settings
 const { getTodayInLA } = require('../utils/helpers');
 const crypto = require('crypto'); // For generating key IDs
@@ -74,7 +74,7 @@ async function addGeminiKey(apiKey, name) {
         }
     }).then(result => {
         // Sync updates to GitHub outside of serialized operation
-        syncToGitHub().catch(err => {
+        dbModule.syncToGitHub().catch(err => {
             console.warn(`Failed to sync to GitHub after adding key ${keyId}:`, err);
         });
         return result;
@@ -207,7 +207,7 @@ async function addMultipleGeminiKeys(apiKeys) {
     }).then(result => {
         // Sync updates to GitHub outside of serialized operation
         if (result.successCount > 0) {
-            syncToGitHub().catch(err => {
+            dbModule.syncToGitHub().catch(err => {
                 console.warn(`Failed to sync to GitHub after batch add:`, err);
             });
         }
@@ -291,7 +291,7 @@ async function deleteGeminiKey(keyId) {
         console.log(`Deleted Gemini key ${trimmedKeyId} from database.`);
         
         // GitHub sync outside the transaction (doesn't affect atomicity)
-        await syncToGitHub();
+        await dbModule.syncToGitHub();
     } catch (error) {
         // If any error occurs during the process, rollback the transaction
         await configService.runDb('ROLLBACK');
@@ -421,7 +421,7 @@ async function clearKeyError(keyId) {
     });
 
     // Sync updates to GitHub (async, outside of serialized operation)
-    syncToGitHub().catch(err => {
+    dbModule.syncToGitHub().catch(err => {
         console.warn(`Failed to sync to GitHub after clearing error for key ${keyId}:`, err);
     });
 }
@@ -487,7 +487,7 @@ async function deleteAllErrorKeys() {
             console.log(`Deleted ${deleteResult.changes} error keys from database.`);
 
             // Sync updates to GitHub - outside transaction
-            await syncToGitHub();
+            await dbModule.syncToGitHub();
 
             return {
                 deletedCount: deleteResult.changes,
@@ -536,7 +536,7 @@ async function recordKeyError(keyId, status) {
     });
 
     // Sync updates to GitHub (async, don't wait, outside of serialized operation)
-    syncToGitHub().catch(err => {
+    dbModule.syncToGitHub().catch(err => {
         console.warn(`Failed to sync to GitHub after recording error for key ${keyId}:`, err);
     });
 }
@@ -717,7 +717,7 @@ async function getNextAvailableGeminiKey(requestedModelId, updateIndex = true) {
                 await configService.runDb('COMMIT');
                 
                 // GitHub sync outside transaction
-                await syncToGitHub();
+                await dbModule.syncToGitHub();
                 console.log(`Selected Gemini Key ID via sequential round-robin: ${selectedKeyData.id} (next index will be: ${currentIndex})`);
             } else {
                 console.log(`Selected Gemini Key ID (read-only): ${selectedKeyData.id} (index not updated)`);
@@ -807,7 +807,7 @@ async function incrementKeyUsage(keyId, modelId, category) {
     });
 
     // Sync updates to GitHub (async, outside of serialized operation)
-    syncToGitHub().catch(err => {
+    dbModule.syncToGitHub().catch(err => {
         console.warn(`Failed to sync to GitHub after incrementing usage for key ${keyId}:`, err);
     });
 }
@@ -940,7 +940,7 @@ async function forceSetQuotaToLimit(keyId, category, modelId, counterKey) {
         console.log(`Key ${keyId} quota forced for category ${category}${modelId ? ` (model: ${modelId})` : ''} for date ${usageDate}.`);
         
         // Sync updates to GitHub outside transaction
-        await syncToGitHub();
+        await dbModule.syncToGitHub();
     } catch (e) {
         // Rollback on error
         await configService.runDb('ROLLBACK');

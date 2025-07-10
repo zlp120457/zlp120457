@@ -125,15 +125,6 @@ async function initializeDatabase() {
             });
           });
 
-          // Initialize Vertex service after database is ready
-          try {
-            const vertexService = require('../services/vertexProxyService');
-            console.log('Initializing Vertex AI service after database setup...');
-            await vertexService.initializeVertexCredentials();
-          } catch (err) {
-            console.error('Failed to initialize Vertex service:', err.message);
-          }
-
           resolve(db);
         } catch (schemaErr) {
           console.error('Failed to initialize database schema:', schemaErr.message);
@@ -147,9 +138,18 @@ async function initializeDatabase() {
 // Start the database initialization
 let db;
 initializeDatabase()
-  .then((database) => {
+  .then(async (database) => {
     db = database;
     console.log('Database initialization completed successfully.');
+
+    // Initialize Vertex service after database is ready and exported
+    try {
+      const vertexService = require('../services/vertexProxyService');
+      console.log('Initializing Vertex AI service after database setup...');
+      await vertexService.initializeVertexCredentials();
+    } catch (err) {
+      console.error('Failed to initialize Vertex service:', err.message);
+    }
   })
   .catch((err) => {
     console.error('Fatal error during database initialization:', err.message);

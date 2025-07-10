@@ -1,6 +1,5 @@
 const fetch = require('node-fetch');
 const { Readable, Transform } = require('stream'); // Import Transform
-const fsSync = require('fs'); // Synchronous fs for manual .env reading
 const fs = require('fs').promises; // Async fs for temp file operations
 const os = require('os');
 const path = require('path');
@@ -21,77 +20,8 @@ const DEFAULT_REGION = 'us-central1';
 // Temporary credentials file path
 let tempCredentialsPath = null;
 
-// --- Manual .env Loading ---
-let VERTEX_JSON_STRING = null; // Store manually loaded value
-
-/**
- * Manually reads and parses the VERTEX variable from a .env file, handling multi-line JSON.
- * @param {string} [envFilePath=".env"] - Path to the .env file.
- */
-function loadVertexEnvManual(envFilePath = ".env") {
-    try {
-        // Check if file exists synchronously
-        if (!fsSync.existsSync(envFilePath)) {
-            console.info(`Manual .env loading: ${envFilePath} not found.`); 
-            VERTEX_JSON_STRING = null;
-            return;
-        }
-
-        const fileContent = fsSync.readFileSync(envFilePath, 'utf-8');
-        const lines = fileContent.split('\n');
-
-        let vertexJsonLines = [];
-        let inVertexVar = false;
-
-        for (const line of lines) {
-            const strippedLine = line.trim();
-            if (!strippedLine || strippedLine.startsWith('#')) {
-                continue; // Skip empty lines and comments
-            }
-
-            if (strippedLine.startsWith('VERTEX=')) {
-                inVertexVar = true;
-                const jsonPart = strippedLine.substring('VERTEX='.length).trim();
-                // Check if JSON starts and potentially ends on the same line
-                if (jsonPart.startsWith('{') && jsonPart.endsWith('}')) {
-                    vertexJsonLines.push(jsonPart);
-                    inVertexVar = false; // Finished single line JSON
-                } else if (jsonPart.startsWith('{')) {
-                    // Start of multi-line JSON
-                    vertexJsonLines.push(jsonPart);
-                } else {
-                    console.warn(`Manual .env loading: VERTEX variable line starts unexpectedly: ${strippedLine}`); // Keep warn log in English
-                    inVertexVar = false; // Reset if format is unexpected
-                }
-            } else if (inVertexVar) {
-                vertexJsonLines.push(strippedLine);
-                // Simple check for end of JSON object
-                if (strippedLine.endsWith('}')) {
-                    inVertexVar = false;
-                }
-            }
-        }
-
-        if (vertexJsonLines.length > 0) {
-            const fullJsonString = vertexJsonLines.join(''); // Join lines without adding spaces/newlines
-            try {
-                // Validate JSON before assigning
-                JSON.parse(fullJsonString);
-                VERTEX_JSON_STRING = fullJsonString;
-                console.info("Manual .env loading: Successfully parsed multi-line VERTEX JSON."); 
-            } catch (jsonError) {
-                console.error(`Manual .env loading: Extracted 'VERTEX' content from ${envFilePath} is not valid JSON: ${jsonError}. Content preview: ${fullJsonString.substring(0, 100)}...`); // Keep error log in English
-                VERTEX_JSON_STRING = null;
-            }
-        } else {
-             console.info(`Manual .env loading: VERTEX variable not found in ${envFilePath}.`); 
-             VERTEX_JSON_STRING = null;
-        }
-    } catch (error) {
-        console.error(`Manual .env loading: Error parsing ${envFilePath}:`, error); // Keep error log in English
-        VERTEX_JSON_STRING = null;
-    }
-}
+// --- Database-only Configuration ---
+let VERTEX_JSON_STRING = null; // Store database loaded value
 
 // --- Initialize Credentials on Load ---
 let isVertexInitialized = false;
@@ -105,10 +35,19 @@ async function initializeVertexCredentials() {
 
     // First try to load configuration from database (priority)
     let databaseConfig = null;
+    let databaseError = false;
     try {
         databaseConfig = await configService.getSetting('vertex_config', null);
     } catch (error) {
-        console.warn("Failed to load Vertex config from database, falling back to environment variables:", error);
+        console.warn("Failed to load Vertex config from database:", error);
+        databaseError = true;
+    }
+
+    // If database is not available, disable Vertex AI
+    if (databaseError) {
+        console.info("Database not available for Vertex configuration, Vertex AI disabled");
+        isVertexInitialized = true; // Mark as initialized (but disabled)
+        return;
     }
 
     // Check database configuration first
@@ -139,75 +78,28 @@ async function initializeVertexCredentials() {
                 return;
             } catch (error) {
                 console.error("Failed to initialize Vertex AI credentials from database:", error);
-                // Fall through to environment variables
+                console.info("Database Vertex configuration is invalid, Vertex AI disabled");
+                isVertexInitialized = true; // Mark as initialized (but disabled)
+                return;
             }
         }
-    }
-
-    // Fallback to environment variables if database config is not available or invalid
-    console.info("Falling back to environment variables for Vertex AI configuration");
-
-    // Check if Express Mode API Key is set in environment
-    const expressApiKey = process.env.EXPRESS_API_KEY;
-    if (expressApiKey && typeof expressApiKey === 'string' && expressApiKey.trim()) {
-        console.info("Using Vertex AI Express Mode with API key from environment");
-        isUsingExpressMode = true;
-        isVertexInitialized = true; // Mark as initialized
-        return; // No need for service account credentials
-    }
-
-    // If Express Mode not available, proceed with service account credentials from environment
-    const vertexJsonFromEnv = process.env.VERTEX;
-    let potentialJsonString = null;
-    let loadedFrom = ''; // Track where the JSON came from
-
-    if (vertexJsonFromEnv && typeof vertexJsonFromEnv === 'string' && vertexJsonFromEnv.trim()) {
-        try {
-            // Validate if it's JSON
-            JSON.parse(vertexJsonFromEnv);
-            potentialJsonString = vertexJsonFromEnv;
-            loadedFrom = 'process.env';
-            console.info("Using VERTEX credentials from process.env.");
-        } catch (jsonError) {
-            console.warn(`Manual .env loading: VERTEX variable from process.env is not valid JSON: ${jsonError}. Falling back to .env file.`); // Keep warn log in English
-            potentialJsonString = null; // Invalidate if parse fails
-        }
-    }
-
-    // If not found or invalid in process.env, try loading manually from .env file
-    if (!potentialJsonString) {
-        loadVertexEnvManual(); // This function sets VERTEX_JSON_STRING internally
-        potentialJsonString = VERTEX_JSON_STRING; // Get the result from the manual load
-        if (potentialJsonString) {
-            loadedFrom = '.env file';
-        }
+    } else if (databaseConfig === null) {
+        // Database configuration is explicitly null (not found)
+        // According to user requirements: when database has no vertex config, should not enable vertex
+        console.info("No Vertex AI configuration found in database, Vertex AI disabled");
+        isVertexInitialized = true; // Mark as initialized (but disabled)
+        return;
     } else {
-         // If loaded successfully from process.env, assign it to the module-level variable
-         VERTEX_JSON_STRING = potentialJsonString;
-    }
-
-    // Check if credentials were ultimately found from either source
-    if (!VERTEX_JSON_STRING) {
-        console.log("Vertex AI credentials not found or invalid in process.env or .env file, Vertex AI disabled."); // Keep log in English
+        // Database configuration exists but is invalid
+        console.warn("Invalid Vertex AI configuration in database, Vertex AI disabled");
         isVertexInitialized = true; // Mark as initialized (but disabled)
         return;
     }
 
-    try {
-        const createdPath = await createServiceAccountFile(VERTEX_JSON_STRING);
-        if (!createdPath) {
-            throw new Error("createServiceAccountFile returned null or undefined.");
-        }
-        tempCredentialsPath = createdPath;
-        process.env.GOOGLE_APPLICATION_CREDENTIALS = tempCredentialsPath;
-        console.log(`Vertex AI credentials created and set: GOOGLE_APPLICATION_CREDENTIALS=${tempCredentialsPath}`); // Keep consolidated log in English
-        isVertexInitialized = true;
-    } catch (error) {
-        console.error("!!! FATAL: Failed to initialize Vertex AI credentials:", error); // Keep error log in English
-        VERTEX_JSON_STRING = null; // Disable Vertex if init fails
-        tempCredentialsPath = null;
-        isVertexInitialized = true; // Mark as initialized (but failed)
-    }
+    // This should not be reached - all cases should return above
+    console.error("Unexpected code path in Vertex AI initialization");
+    isVertexInitialized = true; // Mark as initialized (but disabled)
+    return;
 }
 
 // Don't initialize immediately when module loads - will be initialized after DB is ready
@@ -226,11 +118,11 @@ async function createServiceAccountFile(vertexJsonString) {
         // Basic validation
         const requiredKeys = ["type", "project_id", "private_key_id", "private_key", "client_email", "client_id"];
         if (!requiredKeys.every(key => key in serviceAccountInfo)) {
-            console.error("Invalid JSON format for 'VERTEX' environment variable. Missing required keys."); // Keep error log in English
+            console.error("Invalid JSON format for Vertex database configuration. Missing required keys.");
             return null;
         }
         if (serviceAccountInfo.type !== "service_account") {
-            console.error("Invalid JSON format for 'VERTEX' environment variable. 'type' must be 'service_account'."); // Keep error log in English
+            console.error("Invalid JSON format for Vertex database configuration. 'type' must be 'service_account'.");
             return null;
         }
 
@@ -240,7 +132,7 @@ async function createServiceAccountFile(vertexJsonString) {
         // console.info(`Successfully parsed 'VERTEX' JSON and created temporary credentials file: ${tempFilePath}`); // Removed log
         return tempFilePath;
     } catch (e) {
-        console.error(`Failed to create service account file from 'VERTEX' environment variable JSON: ${e}`, e); // Keep error log in English
+        console.error(`Failed to create service account file from Vertex database configuration JSON: ${e}`, e);
         return null;
     }
 }
@@ -563,8 +455,8 @@ function createSafetySettings(blockLevel = 'OFF') {
 async function proxyVertexChatCompletions(openAIRequestBody, workerApiKey, stream, keepAliveCallback = null) {
     console.log("Using Vertex AI proxy service"); // Keep log in English
 
-    // Whether to use KEEPALIVE in streaming mode - get from database
-    const keepAliveEnabled = String(await configService.getSetting('keepalive', process.env.KEEPALIVE || '0')) === '1';
+    // Whether to use KEEPALIVE in streaming mode - get from database only
+    const keepAliveEnabled = String(await configService.getSetting('keepalive', '0')) === '1';
     const requestedModelId = openAIRequestBody?.model;
 
     // Validate request
@@ -605,7 +497,7 @@ async function proxyVertexChatCompletions(openAIRequestBody, workerApiKey, strea
     try {
         // Initialize client based on authentication mode
         if (isUsingExpressMode) {
-            // Express Mode with API Key - check database first, then environment
+            // Express Mode with API Key - get from database only
             let expressApiKey = null;
 
             try {
@@ -614,16 +506,15 @@ async function proxyVertexChatCompletions(openAIRequestBody, workerApiKey, strea
                     expressApiKey = databaseConfig.expressApiKey;
                     console.log("Using Express API Key from database");
                 } else {
-                    expressApiKey = process.env.EXPRESS_API_KEY;
-                    console.log("Using Express API Key from environment");
+                    throw new Error("Express API Key not found in database configuration");
                 }
             } catch (error) {
-                console.warn("Failed to load Express API Key from database, using environment:", error);
-                expressApiKey = process.env.EXPRESS_API_KEY;
+                console.error("Failed to load Express API Key from database:", error);
+                throw new Error("EXPRESS_API_KEY is not available in database configuration.");
             }
 
             if (!expressApiKey) {
-                throw new Error("EXPRESS_API_KEY is not available in database or environment.");
+                throw new Error("EXPRESS_API_KEY is not available in database configuration.");
             }
 
             ai = new GoogleGenAI({
@@ -1074,14 +965,13 @@ function getVertexSupportedModels() {
 }
 
 /**
- * Checks if the Vertex feature is enabled (based on credentials or API key).
+ * Checks if the Vertex feature is enabled (based on database configuration only).
  * @returns {boolean} True if Vertex AI is enabled, false otherwise.
  */
 function isVertexEnabled() {
-    // Check if we have service account JSON or Express API Key from any source
-    // This is a synchronous check, so we can't check database here
-    // The actual database check happens during initialization
-    return !!VERTEX_JSON_STRING || !!process.env.EXPRESS_API_KEY || isUsingExpressMode;
+    // Check if we have service account JSON or Express API Key from database
+    // This is a synchronous check based on initialization state
+    return !!VERTEX_JSON_STRING || isUsingExpressMode;
 }
 
 /**

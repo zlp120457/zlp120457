@@ -6,8 +6,8 @@ const path = require('path');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 
-// Import the database connection and sync function (this will also trigger initialization)
-const { db } = require('./db');
+// Import the database module (this will also trigger initialization)
+const dbModule = require('./db');
 
 // Import Vertex service but don't initialize yet - will be done after DB is ready
 const vertexService = require('./services/vertexProxyService');

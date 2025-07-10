@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
 const { Readable } = require('stream');
 const { URL } = require('url'); // Import URL for parsing remains relevant for potential future URL parsing
-const { syncToGitHub } = require('../db');
+const dbModule = require('../db');
 const configService = require('./configService');
 const geminiKeyService = require('./geminiKeyService');
 const transformUtils = require('../utils/transform');
