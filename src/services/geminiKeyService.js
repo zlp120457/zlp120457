@@ -402,28 +402,46 @@ async function getErrorKeys() {
 
 /**
  * Clears the error status (sets to NULL) for a specific key.
+ * Only performs update and sync if the key actually has an error status.
  * @param {string} keyId The ID of the key to clear the error for.
- * @returns {Promise<void>}
+ * @returns {Promise<boolean>} Returns true if error status was cleared, false if no error status existed.
  */
 async function clearKeyError(keyId) {
+    let wasCleared = false;
+
     await configService.serializeDb(async () => {
         try {
-            const result = await configService.runDb('UPDATE gemini_keys SET error_status = NULL WHERE id = ?', [keyId]);
-            if (result.changes === 0) {
+            // First check if the key has an error status
+            const keyInfo = await configService.getDb('SELECT error_status FROM gemini_keys WHERE id = ?', [keyId]);
+            if (!keyInfo) {
                 throw new Error(`Key with ID '${keyId}' not found for clearing error status.`);
             }
 
-            console.log(`Cleared error status for key ${keyId}.`);
+            // Only update if there's actually an error status to clear
+            if (keyInfo.error_status !== null) {
+                const result = await configService.runDb('UPDATE gemini_keys SET error_status = NULL WHERE id = ?', [keyId]);
+                if (result.changes > 0) {
+                    wasCleared = true;
+                    console.log(`Cleared error status ${keyInfo.error_status} for key ${keyId}.`);
+                }
+            } else {
+                // Key doesn't have an error status, no action needed
+                console.log(`Key ${keyId} has no error status to clear.`);
+            }
         } catch (error) {
             console.error(`Error clearing error status for key ${keyId}:`, error);
             throw error;
         }
     });
 
-    // Sync updates to GitHub (async, outside of serialized operation)
-    dbModule.syncToGitHub().catch(err => {
-        console.warn(`Failed to sync to GitHub after clearing error for key ${keyId}:`, err);
-    });
+    // Only sync to GitHub if we actually made changes
+    if (wasCleared) {
+        dbModule.syncToGitHub().catch(err => {
+            console.warn(`Failed to sync to GitHub after clearing error for key ${keyId}:`, err);
+        });
+    }
+
+    return wasCleared;
 }
 
 /**

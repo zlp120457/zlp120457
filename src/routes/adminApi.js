@@ -154,6 +154,18 @@ router.post('/test-gemini-key', async (req, res, next) => {
 if (isSuccess) {
                  // Increment usage and sync to GitHub
                  await geminiKeyService.incrementKeyUsage(keyId, modelId, modelCategory);
+
+                 // Clear error status if the key was previously marked with an error
+                 // This allows previously failed keys to be restored when they work again during batch testing
+                 try {
+                     const wasCleared = await geminiKeyService.clearKeyError(keyId);
+                     if (wasCleared) {
+                         console.log(`Restored key ${keyId} - cleared previous error status during testing.`);
+                     }
+                 } catch (clearError) {
+                     // Log but don't fail the test if clearing error status fails
+                     console.warn(`Failed to clear error status for key ${keyId}:`, clearError);
+                 }
             } else {
                  // Record 400/401/403 errors (invalid API key, unauthorized, forbidden)
                  if (testResponseStatus === 400 || testResponseStatus === 401 || testResponseStatus === 403) {
