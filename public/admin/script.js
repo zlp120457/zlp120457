@@ -2406,12 +2406,17 @@ async function renderGeminiKeys(keys) {
             const webSearchToggle = document.getElementById('web-search-toggle');
             webSearchToggle.checked = settings.webSearch === '1' || settings.webSearch === 1 || settings.webSearch === true;
 
+            // Set Auto Test toggle
+            const autoTestToggle = document.getElementById('auto-test-toggle');
+            autoTestToggle.checked = settings.autoTest === '1' || settings.autoTest === 1 || settings.autoTest === true;
+
         } catch (error) {
             console.error('Error loading system settings:', error);
             // Set default values
             document.getElementById('keepalive-toggle').checked = false;
             document.getElementById('max-retry-input').value = 3;
             document.getElementById('web-search-toggle').checked = false;
+            document.getElementById('auto-test-toggle').checked = false;
         }
     }
 
@@ -2420,11 +2425,13 @@ async function renderGeminiKeys(keys) {
             const keepaliveToggle = document.getElementById('keepalive-toggle');
             const maxRetryInput = document.getElementById('max-retry-input');
             const webSearchToggle = document.getElementById('web-search-toggle');
+            const autoTestToggle = document.getElementById('auto-test-toggle');
 
             const settings = {
                 keepalive: keepaliveToggle.checked ? '1' : '0',
                 maxRetry: parseInt(maxRetryInput.value) || 3,
-                webSearch: webSearchToggle.checked ? '1' : '0'
+                webSearch: webSearchToggle.checked ? '1' : '0',
+                autoTest: autoTestToggle.checked ? '1' : '0'
             };
 
             const result = await apiFetch('/system-settings', {
@@ -2483,24 +2490,50 @@ async function renderGeminiKeys(keys) {
            const githubApiResponse = await fetch('https://api.github.com/repos/dreamhartley/gemini-proxy-panel/releases/latest');
            if (!githubApiResponse.ok) {
                console.warn('Could not fetch latest release from GitHub.');
+               // Show version display even if GitHub check fails
+               showVersionDisplay(localVersion);
                return;
            }
            const latestRelease = await githubApiResponse.json();
            const latestVersion = latestRelease.tag_name.replace('v', '').trim();
 
-           // 3. Compare versions and show notifier if the latest version is greater
+           // 3. Compare versions and show appropriate notifier
+           const updateNotifier = document.getElementById('update-notifier');
+           if (!updateNotifier) return;
+
            if (compareVersions(latestVersion, localVersion) > 0) {
-               const updateNotifier = document.getElementById('update-notifier');
-               if (updateNotifier) {
-                   updateNotifier.classList.remove('hidden');
-                   updateNotifier.textContent = 'New';
-                   updateNotifier.setAttribute('data-tooltip', t('update_available'));
-                   // Remove the default title to prevent browser tooltip
-                   updateNotifier.removeAttribute('title');
-               }
+               // Show update available notification (red)
+               updateNotifier.classList.remove('hidden', 'version-display');
+               updateNotifier.textContent = 'New';
+               updateNotifier.setAttribute('data-tooltip', t('update_available'));
+               updateNotifier.removeAttribute('title');
+           } else {
+               // Show current version (blue)
+               showVersionDisplay(localVersion);
            }
        } catch (error) {
            console.error('Error checking for updates:', error);
+           // Try to show version display even if update check fails
+           try {
+               const localVersionResponse = await fetch('/admin/version.txt?t=' + new Date().getTime());
+               if (localVersionResponse.ok) {
+                   const localVersion = (await localVersionResponse.text()).trim();
+                   showVersionDisplay(localVersion);
+               }
+           } catch (versionError) {
+               console.error('Error fetching local version:', versionError);
+           }
+       }
+   }
+
+   function showVersionDisplay(version) {
+       const updateNotifier = document.getElementById('update-notifier');
+       if (updateNotifier) {
+           updateNotifier.classList.remove('hidden');
+           updateNotifier.classList.add('version-display');
+           updateNotifier.textContent = `v${version}`;
+           updateNotifier.setAttribute('data-tooltip', t('current_is_latest'));
+           updateNotifier.removeAttribute('title');
        }
    }
 
@@ -2509,12 +2542,23 @@ window.show = function(what) {
     if (what === 'update') {
         const updateNotifier = document.getElementById('update-notifier');
         if (updateNotifier) {
-            updateNotifier.classList.remove('hidden');
+            updateNotifier.classList.remove('hidden', 'version-display');
             updateNotifier.textContent = 'New';
             updateNotifier.setAttribute('data-tooltip', t('update_available'));
             updateNotifier.removeAttribute('title');
             console.log("Debug: Forcibly showing update notifier.");
             return "Update notifier shown.";
+        } else {
+            const msg = "Debug Error: #update-notifier element not found.";
+            console.error(msg);
+            return msg;
+        }
+    } else if (what === 'version') {
+        const updateNotifier = document.getElementById('update-notifier');
+        if (updateNotifier) {
+            showVersionDisplay('1.2.0');
+            console.log("Debug: Forcibly showing version display.");
+            return "Version display shown.";
         } else {
             const msg = "Debug Error: #update-notifier element not found.";
             console.error(msg);

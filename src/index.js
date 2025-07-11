@@ -12,6 +12,8 @@ const dbModule = require('./db');
 // Import Vertex service but don't initialize yet - will be done after DB is ready
 const vertexService = require('./services/vertexProxyService');
 
+// Note: schedulerService is imported lazily in routes/adminApi.js to avoid database initialization issues
+
 // Import route handlers
 const authRoutes = require('./routes/auth');
 const adminApiRoutes = require('./routes/adminApi');
@@ -91,9 +93,9 @@ app.use((err, req, res, next) => {
 });
 
 // --- Start Server ---
-app.listen(port, '0.0.0.0', () => {
+app.listen(port, '0.0.0.0', async () => {
     console.log(`Gemini Proxy Panel (Node.js version) listening on port ${port} (all interfaces)`);
-    
+
     // Log Proxy Pool Status
     const proxyStatus = proxyPool.getProxyPoolStatus(); // Get status from proxyPool module
     if (proxyStatus.enabled) {

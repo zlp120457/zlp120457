@@ -1,5 +1,92 @@
 /* Optional: Add custom CSS rules here if needed */
 
+/* Light mode warm background colors */
+body[data-theme="light"] {
+    background-color: #f5f3f0 !important; /* Warm light khaki background */
+}
+
+body[data-theme="light"] .bg-gray-100 {
+    background-color: #f5f3f0 !important; /* Warm light khaki background */
+}
+
+body[data-theme="light"] .bg-white {
+    background-color: #faf9f7 !important; /* Slightly warmer white for cards */
+}
+
+body[data-theme="light"] section {
+    background-color: #faf9f7 !important; /* Slightly warmer white for sections */
+}
+
+/* Light mode border and shadow adjustments for warm theme */
+body[data-theme="light"] .border,
+body[data-theme="light"] .border-gray-200,
+body[data-theme="light"] .border-gray-300 {
+    border-color: #e6ddd4 !important; /* Warmer border color */
+}
+
+body[data-theme="light"] .shadow,
+body[data-theme="light"] .shadow-md,
+body[data-theme="light"] .shadow-lg {
+    box-shadow: 0 1px 3px 0 rgba(139, 116, 88, 0.1), 0 1px 2px 0 rgba(139, 116, 88, 0.06) !important; /* Warmer shadow */
+}
+
+/* Adjust modal and card backgrounds for warm theme */
+body[data-theme="light"] .modal-content,
+body[data-theme="light"] .card-item {
+    background-color: #faf9f7 !important;
+    border-color: #e6ddd4 !important;
+}
+
+/* Light mode input field adjustments for warm theme */
+body[data-theme="light"] input[type="text"],
+body[data-theme="light"] input[type="password"],
+body[data-theme="light"] input[type="number"],
+body[data-theme="light"] textarea,
+body[data-theme="light"] select {
+    background-color: #f8f6f3 !important; /* Warm input background */
+    border-color: #e6ddd4 !important; /* Warmer border */
+}
+
+body[data-theme="light"] input[type="text"]:focus,
+body[data-theme="light"] input[type="password"]:focus,
+body[data-theme="light"] input[type="number"]:focus,
+body[data-theme="light"] textarea:focus,
+body[data-theme="light"] select:focus {
+    background-color: #faf9f7 !important; /* Slightly lighter when focused */
+    border-color: #3b82f6 !important; /* Keep blue focus border */
+    box-shadow: 0 0 0 1px #3b82f6 !important;
+}
+
+/* Light mode button adjustments for warm theme */
+body[data-theme="light"] .bg-gray-100 {
+    background-color: #f0ede8 !important; /* Warmer gray-100 */
+}
+
+body[data-theme="light"] .bg-gray-200 {
+    background-color: #e8e3dc !important; /* Warmer gray-200 */
+}
+
+body[data-theme="light"] .hover\:bg-gray-200:hover {
+    background-color: #e0d9d0 !important; /* Warmer hover state */
+}
+
+body[data-theme="light"] .hover\:bg-gray-300:hover {
+    background-color: #d6cfc4 !important; /* Warmer hover state */
+}
+
+/* Light mode additional button and hover state adjustments */
+body[data-theme="light"] .bg-white {
+    background-color: #faf9f7 !important; /* Warmer white for buttons */
+}
+
+body[data-theme="light"] .hover\:bg-gray-50:hover {
+    background-color: #f5f2ed !important; /* Warmer hover state */
+}
+
+body[data-theme="light"] .hover\:bg-red-50:hover {
+    background-color: #fef7f7 !important; /* Slightly warmer red hover */
+}
+
 /* Statistics bar styles */
 .stats-bar {
     transition: box-shadow 0.2s ease; /* Removed background-color transition */
@@ -545,7 +632,7 @@ body[data-theme="dark"] .bg-gray-100.text-gray-800 {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
+    min-width: 32px;
     height: 18px;
     background: linear-gradient(135deg, #ff4444, #ff6666);
     border-radius: 9px;
@@ -560,9 +647,23 @@ body[data-theme="dark"] .bg-gray-100.text-gray-800 {
     box-shadow: 0 2px 4px rgba(255, 68, 68, 0.3);
     position: relative;
     transform: translateY(-2px);
+    padding: 0 6px;
 }
 
-#update-notifier:hover {
+/* Version Display Styles (when no update available) */
+#update-notifier.version-display {
+    background: linear-gradient(135deg, #3b82f6, #60a5fa) !important;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3) !important;
+    min-width: auto;
+    padding: 0 8px;
+}
+
+#update-notifier.version-display:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+}
+
+#update-notifier:not(.version-display):hover {
     transform: translateY(-2px) scale(1.1);
     box-shadow: 0 4px 8px rgba(255, 68, 68, 0.4);
 }

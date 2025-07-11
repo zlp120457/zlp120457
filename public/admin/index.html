@@ -56,6 +56,15 @@
             scrollbar-width: thin;
             scrollbar-color: #cbd5e1 #f1f5f9;
         }
+
+        /* Light mode scrollbar adjustments for warm theme */
+        body[data-theme="light"] .keys-grid::-webkit-scrollbar-track {
+            background: #ede8e0; /* Warmer scrollbar track */
+        }
+
+        body[data-theme="light"] .keys-grid {
+            scrollbar-color: #cbd5e1 #ede8e0; /* Warmer scrollbar for Firefox */
+        }
         /* Progress ring styles */
         .progress-ring__circle {
             transition: stroke-dashoffset 0.35s;
@@ -204,8 +213,8 @@
                 </div>
                 <div>
                     <label for="gemini-key-value" class="block text-sm font-medium text-gray-700" data-i18n="api_key_value">API 密钥值</label>
-                    <input type="text" id="gemini-key-value" name="key" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="请输入 Gemini API 密钥" data-i18n-placeholder="enter_gemini_api_key">
-                    <p class="text-xs text-gray-500 mt-1" data-i18n="gemini_key_batch_help">支持批量添加：使用逗号分隔多个密钥。</p>
+                    <textarea id="gemini-key-value" name="key" required rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="请输入 Gemini API 密钥" data-i18n-placeholder="enter_gemini_api_key"></textarea>
+                    <p class="text-xs text-gray-500 mt-1" data-i18n="gemini_key_batch_help">支持批量添加：使用逗号分隔多个密钥，或每行一个密钥。</p>
                 </div>
                 <!-- Removed Daily Quota input for Gemini Key -->
                 <div class="flex space-x-3">
@@ -449,6 +458,18 @@
                         </div>
                         <label class="toggle-switch">
                             <input type="checkbox" id="web-search-toggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <!-- Auto Test Setting -->
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <label class="text-sm font-medium text-gray-700" data-i18n="auto_test_setting">自动批量测试</label>
+                            <p class="text-xs text-gray-500" data-i18n="auto_test_description">启用后将在每天北京时间4点自动进行批量测试</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="auto-test-toggle">
                             <span class="toggle-slider"></span>
                         </label>
                     </div>

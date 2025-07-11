@@ -11,6 +11,27 @@ const proxyPool = require('../utils/proxyPool'); // Import the new proxy pool mo
 // Base Gemini API URL
 const BASE_GEMINI_URL = process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com';
 
+// Helper function to check if a 400 error should be ignored for key marking
+function shouldIgnore400Error(errorObject) {
+    try {
+        // Check if the error is related to user location not supported
+        if (errorObject && errorObject.message) {
+            const errorMessage = errorObject.message;
+            const errorStatus = errorObject.status;
+
+            // Check for the specific "User location is not supported" error
+            if (errorMessage && errorMessage.includes('User location is not supported for the API use.') &&
+                errorStatus === 'FAILED_PRECONDITION') {
+                return true;
+            }
+        }
+        return false;
+    } catch (e) {
+        // If we can't parse the error, don't ignore it
+        return false;
+    }
+}
+
 async function proxyChatCompletions(openAIRequestBody, workerApiKey, stream, thinkingBudget, keepAliveCallback = null) {
     const requestedModelId = openAIRequestBody?.model;
 
@@ -243,8 +264,17 @@ async function proxyChatCompletions(openAIRequestBody, workerApiKey, stream, thi
                         // Record persistent error for the key
                         geminiKeyService.recordKeyError(selectedKey.id, geminiResponse.status)
                              .catch(err => console.error(`Error recording key error ${geminiResponse.status} for key ${selectedKey.id} in background:`, err));
+                    } else if (geminiResponse.status === 400) {
+                        // Check if this is a location-related 400 error that should be ignored
+                        console.log(`400 error details: ${JSON.stringify(lastError)}`);
+                        if (!shouldIgnore400Error(lastError)) {
+                            geminiKeyService.recordKeyError(selectedKey.id, geminiResponse.status)
+                                .catch(err => console.error(`Error recording key error ${geminiResponse.status} for key ${selectedKey.id} in background:`, err));
+                        } else {
+                            console.log(`Skipping error marking for key ${selectedKey.id} - location not supported error.`);
+                        }
                     } else {
-                        // Record error for other status codes (400, 500, etc.)
+                        // Record error for other status codes (500, etc.)
                         console.log(`${geminiResponse.status} error details: ${JSON.stringify(lastError)}`);
                         geminiKeyService.recordKeyError(selectedKey.id, geminiResponse.status)
                              .catch(err => console.error(`Error recording key error ${geminiResponse.status} for key ${selectedKey.id} in background:`, err));

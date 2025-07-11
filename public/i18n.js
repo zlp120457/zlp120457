@@ -39,7 +39,7 @@ class I18n {
                 'name_help': '用于识别的友好名称。如果未提供，将使用自动生成的ID。',
                 'api_key_value': 'API 密钥值',
                 'enter_gemini_api_key': '请输入 Gemini API 密钥',
-                'gemini_key_batch_help': '支持批量添加：使用逗号分隔多个密钥。',
+                'gemini_key_batch_help': '支持批量添加：使用逗号分隔多个密钥，或每行一个密钥。',
                 'add_gemini_key': '添加 Gemini 密钥',
                 'run_all_test': '运行所有测试',
                 'clean_error_keys': '清理报错密钥',
@@ -169,7 +169,10 @@ class I18n {
                 'max_retry_description': 'API请求失败时的最大重试次数（默认：3）',
                 'web_search_setting': '联网搜索',
                 'web_search_description': '启用后将在模型列表中显示带-search后缀的联网搜索模型',
-                'update_available': '有可用的新版本'
+                'auto_test_setting': '自动批量测试',
+                'auto_test_description': '启用后将在每天北京时间4点自动进行批量测试',
+                'update_available': '有可用的新版本',
+                'current_is_latest': '当前为最新版本'
              },
              en: {
                  // 登录页面
@@ -207,7 +210,7 @@ class I18n {
                 'name_help': 'A friendly name for identification. If not provided, an auto-generated ID will be used.',
                 'api_key_value': 'API Key Value',
                 'enter_gemini_api_key': 'Enter Gemini API Key',
-                'gemini_key_batch_help': 'Batch addition supported: Use commas to separate multiple keys.',
+                'gemini_key_batch_help': 'Batch addition supported: Use commas to separate multiple keys, or one key per line.',
                 'add_gemini_key': 'Add Gemini Key',
                 'run_all_test': 'Run All Test',
                 'clean_error_keys': 'Clean Error Keys',
@@ -337,7 +340,10 @@ class I18n {
                 'max_retry_description': 'Maximum retry attempts for failed API requests (default: 3)',
                 'web_search_setting': 'Web Search',
                 'web_search_description': 'Enable to show models with -search suffix for web search functionality',
-                'update_available': 'A new version is available'
+                'auto_test_setting': 'Auto Batch Test',
+                'auto_test_description': 'Enable to automatically run batch tests daily at 4 AM Beijing time',
+                'update_available': 'A new version is available',
+                'current_is_latest': 'Current is latest version'
              }
          };
          

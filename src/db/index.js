@@ -150,6 +150,16 @@ initializeDatabase()
     } catch (err) {
       console.error('Failed to initialize Vertex service:', err.message);
     }
+
+    // Initialize scheduler service after database is ready
+    try {
+      const schedulerService = require('../services/schedulerService');
+      console.log('Initializing Scheduler Service after database setup...');
+      await schedulerService.initialize();
+      console.log('Scheduler Service: Initialized successfully');
+    } catch (err) {
+      console.error('Scheduler Service: Failed to initialize:', err.message);
+    }
   })
   .catch((err) => {
     console.error('Fatal error during database initialization:', err.message);

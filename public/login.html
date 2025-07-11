@@ -24,6 +24,27 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Light mode warm background colors */
+        body {
+            background-color: #f5f3f0 !important; /* Warm light khaki background */
+        }
+
+        .bg-white {
+            background-color: #faf9f7 !important; /* Slightly warmer white for login form */
+        }
+
+        /* Input field adjustments for warm theme */
+        input[type="password"] {
+            background-color: #f8f6f3 !important; /* Warm input background */
+            border-color: #e6ddd4 !important; /* Warmer border */
+        }
+
+        input[type="password"]:focus {
+            background-color: #faf9f7 !important; /* Slightly lighter when focused */
+            border-color: #4f46e5 !important; /* Keep indigo focus border */
+            box-shadow: 0 0 0 1px #4f46e5 !important;
+        }
     </style>
 </head>
 <body class="bg-gray-100 flex items-center justify-center h-screen">
