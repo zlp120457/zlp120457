@@ -523,6 +523,55 @@ async function deleteAllErrorKeys() {
 }
 
 /**
+ * Clears error status for all keys that have error status (400, 401, or 403).
+ * @returns {Promise<{clearedCount: number, clearedKeys: Array<{id: string, name: string}>}>}
+ */
+async function clearAllErrorKeys() {
+    return await configService.serializeDb(async () => {
+        await configService.runDb('BEGIN TRANSACTION');
+
+        try {
+            // First, get all error keys to return information about what was cleared
+            const errorKeys = await configService.allDb('SELECT id, name, error_status FROM gemini_keys WHERE error_status = 400 OR error_status = 401 OR error_status = 403');
+
+            if (errorKeys.length === 0) {
+                await configService.runDb('COMMIT');
+                return { clearedCount: 0, clearedKeys: [] };
+            }
+
+            // Get the error key IDs
+            const errorKeyIds = errorKeys.map(key => key.id);
+
+            // Clear error status for all error keys
+            const placeholders = errorKeyIds.map(() => '?').join(',');
+            const updateResult = await configService.runDb(
+                `UPDATE gemini_keys SET error_status = NULL WHERE id IN (${placeholders})`,
+                errorKeyIds
+            );
+
+            await configService.runDb('COMMIT');
+            console.log(`Cleared error status for ${updateResult.changes} keys.`);
+
+            // Sync updates to GitHub - outside transaction
+            await dbModule.syncToGitHub();
+
+            return {
+                clearedCount: updateResult.changes,
+                clearedKeys: errorKeys.map(key => ({
+                    id: key.id,
+                    name: key.name || key.id,
+                    previousErrorStatus: key.error_status
+                }))
+            };
+        } catch (error) {
+            await configService.runDb('ROLLBACK');
+            console.error('Error clearing all error keys:', error);
+            throw error;
+        }
+    });
+}
+
+/**
  * Records a persistent error (400/401/403) for a key.
  * @param {string} keyId
  * @param {400 | 401 | 403} status
@@ -1100,4 +1149,5 @@ module.exports = {
     getErrorKeys,
     clearKeyError,
     deleteAllErrorKeys,
+    clearAllErrorKeys,
 };

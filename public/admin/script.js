@@ -59,6 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const moonIcon = document.getElementById('moon-icon');
     // Run All Test Elements
     const runAllTestBtn = document.getElementById('run-all-test-btn');
+    const ignoreAllErrorsBtn = document.getElementById('ignore-all-errors-btn');
     const cleanErrorKeysBtn = document.getElementById('clean-error-keys-btn');
     const geminiKeysActionsDiv = document.getElementById('gemini-keys-actions');
     const testProgressArea = document.getElementById('test-progress-area');
@@ -411,10 +412,12 @@ async function renderGeminiKeys(keys) {
         // Check if there are any error keys
         const hasErrorKeys = keys.some(key => key.errorStatus === 400 || key.errorStatus === 401 || key.errorStatus === 403);
 
-        // Show/hide clean error keys button based on error keys existence
+        // Show/hide error-related buttons based on error keys existence
         if (hasErrorKeys) {
+            ignoreAllErrorsBtn.classList.remove('hidden');
             cleanErrorKeysBtn.classList.remove('hidden');
         } else {
+            ignoreAllErrorsBtn.classList.add('hidden');
             cleanErrorKeysBtn.classList.add('hidden');
         }
 
@@ -860,95 +863,8 @@ async function renderGeminiKeys(keys) {
             });
         });
 
-        // Add test button click event (no changes needed here)
-        document.querySelectorAll('.test-gemini-key').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const keyId = e.target.dataset.id;
-                const testSection = document.querySelector(`.test-model-section[data-key-id="${keyId}"]`);
-
-                // Toggle display status
-                if (testSection.classList.contains('hidden')) {
-                    // Hide all other test areas
-                    document.querySelectorAll('.test-model-section').forEach(section => {
-                        section.classList.add('hidden');
-                        section.querySelector('.test-result')?.classList.add('hidden');
-                    });
-
-                    // Show current test area
-                    testSection.classList.remove('hidden');
-                } else {
-                    testSection.classList.add('hidden');
-                }
-            });
-        });
-
-        // Add run test button click event（修正：测试报错只显示在测试区域）
-        document.querySelectorAll('.run-test-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const testSection = e.target.closest('.test-model-section');
-                const keyId = testSection.dataset.keyId;
-                const modelId = testSection.querySelector('.model-select').value;
-                const resultDiv = testSection.querySelector('.test-result');
-                const resultPre = resultDiv.querySelector('pre');
-
-                if (!modelId) {
-                    showError(t('please_select_model'));
-                    return;
-                }
-
-                // Show result area and set "Loading" text
-                resultDiv.classList.remove('hidden');
-                resultPre.textContent = t('testing');
-
-                // Send test request directly to handle both success and error responses
-                let result = null;
-                try {
-                    // Use direct fetch instead of apiFetch to get raw response
-                    const response = await fetch('/api/admin/test-gemini-key', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        credentials: 'include',
-                        body: JSON.stringify({ keyId, modelId })
-                    });
-
-                    // Parse response regardless of status code
-                    const contentType = response.headers.get("content-type");
-                    if (contentType && contentType.indexOf("application/json") !== -1) {
-                        result = await response.json();
-                    } else {
-                        const textContent = await response.text();
-                        result = {
-                            success: false,
-                            status: response.status,
-                            content: textContent || 'No response content'
-                        };
-                    }
-
-                    if (result) {
-                        const formattedContent = typeof result.content === 'object'
-                            ? JSON.stringify(result.content, null, 2)
-                            : result.content;
-
-                        if (result.success) {
-                            resultPre.textContent = `${t('test_passed')}\n${t('status')}: ${result.status}\n\n${t('response')}:\n${formattedContent}`;
-                            resultPre.className = 'text-xs bg-green-50 text-green-800 p-2 rounded overflow-x-auto';
-                        } else {
-                            resultPre.textContent = `${t('test_failed')}\n${t('status')}: ${result.status}\n\n${t('response')}:\n${formattedContent}`;
-                            resultPre.className = 'text-xs bg-red-50 text-red-800 p-2 rounded overflow-x-auto';
-                        }
-                    } else {
-                        resultPre.textContent = t('test_failed_no_response');
-                        resultPre.className = 'text-xs bg-red-50 text-red-800 p-2 rounded overflow-x-auto';
-                    }
-                } catch (error) {
-                    // 只在测试区域显示网络错误
-                    resultPre.textContent = t('test_failed_network', error.message || t('unknown_error'));
-                    resultPre.className = 'text-xs bg-red-50 text-red-800 p-2 rounded overflow-x-auto';
-                }
-            });
-        });
+        // Note: Event listeners for .test-gemini-key and .run-test-btn are now handled
+        // by global event delegation to prevent duplicate listeners and DOM reference issues
     }
 
     function renderWorkerKeys(keys) {
@@ -1499,8 +1415,117 @@ async function renderGeminiKeys(keys) {
         }
     });
 
-    // Delete Gemini Key (no changes needed)
+    // Global event delegation for Gemini key actions
     document.addEventListener('click', async (e) => {
+        // Handle test gemini key button clicks
+        if (e.target.classList.contains('test-gemini-key')) {
+            const keyId = e.target.dataset.id;
+            const testSection = document.querySelector(`.test-model-section[data-key-id="${keyId}"]`);
+
+            // Check if testSection exists (防止DOM重新渲染后元素不存在的错误)
+            if (!testSection) {
+                console.warn('Test section not found for keyId:', keyId);
+                return;
+            }
+
+            // Toggle display status
+            if (testSection.classList.contains('hidden')) {
+                // Hide all other test areas
+                document.querySelectorAll('.test-model-section').forEach(section => {
+                    section.classList.add('hidden');
+                    section.querySelector('.test-result')?.classList.add('hidden');
+                });
+
+                // Show current test area
+                testSection.classList.remove('hidden');
+            } else {
+                testSection.classList.add('hidden');
+            }
+            return;
+        }
+
+        // Handle run test button clicks
+        if (e.target.classList.contains('run-test-btn') && !e.target.id) { // Exclude the main "run all test" button
+            const testSection = e.target.closest('.test-model-section');
+
+            // Check if testSection exists (防止DOM重新渲染后元素不存在的错误)
+            if (!testSection) {
+                console.warn('Test section not found, possibly due to DOM re-rendering');
+                return;
+            }
+
+            const keyId = testSection.dataset.keyId;
+            const modelSelect = testSection.querySelector('.model-select');
+            const resultDiv = testSection.querySelector('.test-result');
+            const resultPre = resultDiv?.querySelector('pre');
+
+            // Additional safety checks
+            if (!keyId || !modelSelect || !resultDiv || !resultPre) {
+                console.warn('Required elements not found in test section');
+                return;
+            }
+
+            const modelId = modelSelect.value;
+
+            if (!modelId) {
+                showError(t('please_select_model'));
+                return;
+            }
+
+            // Show result area and set "Loading" text
+            resultDiv.classList.remove('hidden');
+            resultPre.textContent = t('testing');
+
+            // Send test request directly to handle both success and error responses
+            let result = null;
+            try {
+                // Use direct fetch instead of apiFetch to get raw response
+                const response = await fetch('/api/admin/test-gemini-key', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ keyId, modelId })
+                });
+
+                // Parse response regardless of status code
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    result = await response.json();
+                } else {
+                    const textContent = await response.text();
+                    result = {
+                        success: false,
+                        status: response.status,
+                        content: textContent || 'No response content'
+                    };
+                }
+
+                if (result) {
+                    const formattedContent = typeof result.content === 'object'
+                        ? JSON.stringify(result.content, null, 2)
+                        : result.content;
+
+                    if (result.success) {
+                        resultPre.textContent = `${t('test_passed')}\n${t('status')}: ${result.status}\n\n${t('response')}:\n${formattedContent}`;
+                        resultPre.className = 'text-xs bg-green-50 text-green-800 p-2 rounded overflow-x-auto';
+                    } else {
+                        resultPre.textContent = `${t('test_failed')}\n${t('status')}: ${result.status}\n\n${t('response')}:\n${formattedContent}`;
+                        resultPre.className = 'text-xs bg-red-50 text-red-800 p-2 rounded overflow-x-auto';
+                    }
+                } else {
+                    resultPre.textContent = t('test_failed_no_response');
+                    resultPre.className = 'text-xs bg-red-50 text-red-800 p-2 rounded overflow-x-auto';
+                }
+            } catch (error) {
+                // 只在测试区域显示网络错误
+                resultPre.textContent = t('test_failed_network', error.message || t('unknown_error'));
+                resultPre.className = 'text-xs bg-red-50 text-red-800 p-2 rounded overflow-x-auto';
+            }
+            return;
+        }
+
         if (e.target.classList.contains('delete-gemini-key')) {
             const keyId = e.target.dataset.id;
             if (confirm(t('delete_confirm_gemini', keyId))) {
@@ -1820,6 +1845,42 @@ async function renderGeminiKeys(keys) {
         testCancelRequested = true;
         testStatusText.textContent = t('cancelling_tests');
         cancelAllTestBtn.disabled = true;
+    });
+
+    // Ignore All Errors Logic
+    ignoreAllErrorsBtn.addEventListener('click', async () => {
+        // Prevent concurrent operations
+        if (operationInProgress) {
+            showError(t('operation_in_progress') || 'Another operation is in progress. Please wait.');
+            return;
+        }
+
+        if (!confirm(t('ignore_all_errors_confirm'))) {
+            return;
+        }
+
+        try {
+            operationInProgress = true; // Lock operations
+            showLoading();
+            const result = await apiFetch('/clear-all-errors', {
+                method: 'POST',
+            });
+
+            if (result && result.success) {
+                if (result.clearedCount === 0) {
+                    showSuccess(t('no_error_keys_found'));
+                } else {
+                    showSuccess(t('error_keys_ignored', result.clearedCount));
+                }
+                await loadGeminiKeys(); // Reload the keys list
+            }
+        } catch (error) {
+            console.error('Error ignoring error keys:', error);
+            showError(t('failed_to_ignore_error_keys', error.message));
+        } finally {
+            operationInProgress = false; // Release lock
+            hideLoading();
+        }
     });
 
     // Clean Error Keys Logic

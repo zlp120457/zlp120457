@@ -6,23 +6,21 @@ const proxyPool = require('../utils/proxyPool');
 // Base Gemini API URL
 const BASE_GEMINI_URL = process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com';
 
-// Helper function to check if a 400 error should be ignored for key marking
-function shouldIgnore400Error(responseBody) {
+// Helper function to check if a 400 error should be marked for key error
+function shouldMark400Error(responseBody) {
     try {
-        // Check if the error is related to user location not supported
+        // Only mark 400 errors if the message indicates invalid API key
         if (responseBody && responseBody.error) {
             const errorMessage = responseBody.error.message;
-            const errorStatus = responseBody.error.status;
-            
-            // Check for the specific "User location is not supported" error
-            if (errorMessage && errorMessage.includes('User location is not supported for the API use.') &&
-                errorStatus === 'FAILED_PRECONDITION') {
+
+            // Check for the specific "API key not valid" error
+            if (errorMessage && errorMessage.includes('API key not valid. Please pass a valid API key.')) {
                 return true;
             }
         }
         return false;
     } catch (e) {
-        // If we can't parse the error, don't ignore it
+        // If we can't parse the error, don't mark it
         return false;
     }
 }
@@ -109,15 +107,15 @@ async function testSingleKey(keyId, modelId) {
                 }
             } else {
                 // Record 400/401/403 errors (invalid API key, unauthorized, forbidden)
-                // But skip 400 errors that are location-related
+                // But only mark 400 errors if they indicate invalid API key
                 if (testResponseStatus === 401 || testResponseStatus === 403) {
                     await geminiKeyService.recordKeyError(keyId, testResponseStatus);
                 } else if (testResponseStatus === 400) {
-                    // Check if this is a location-related 400 error that should be ignored
-                    if (!shouldIgnore400Error(testResponseBody)) {
+                    // Check if this is an invalid API key 400 error that should be marked
+                    if (shouldMark400Error(testResponseBody)) {
                         await geminiKeyService.recordKeyError(keyId, testResponseStatus);
                     } else {
-                        console.log(`Batch Test: Skipping error marking for key ${keyId} - location not supported error.`);
+                        console.log(`Batch Test: Skipping error marking for key ${keyId} - 400 error not related to invalid API key.`);
                     }
                 }
             }

@@ -91,23 +91,21 @@ router.delete('/gemini-keys/:id', async (req, res, next) => {
 // Base Gemini API URL
 const BASE_GEMINI_URL = process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com';
 
-// Helper function to check if a 400 error should be ignored for key marking
-function shouldIgnore400Error(responseBody) {
+// Helper function to check if a 400 error should be marked for key error
+function shouldMark400Error(responseBody) {
     try {
-        // Check if the error is related to user location not supported
+        // Only mark 400 errors if the message indicates invalid API key
         if (responseBody && responseBody.error) {
             const errorMessage = responseBody.error.message;
-            const errorStatus = responseBody.error.status;
 
-            // Check for the specific "User location is not supported" error
-            if (errorMessage && errorMessage.includes('User location is not supported for the API use.') &&
-                errorStatus === 'FAILED_PRECONDITION') {
+            // Check for the specific "API key not valid" error
+            if (errorMessage && errorMessage.includes('API key not valid. Please pass a valid API key.')) {
                 return true;
             }
         }
         return false;
     } catch (e) {
-        // If we can't parse the error, don't ignore it
+        // If we can't parse the error, don't mark it
         return false;
     }
 }
@@ -191,15 +189,15 @@ if (isSuccess) {
                  }
             } else {
                  // Record 400/401/403 errors (invalid API key, unauthorized, forbidden)
-                 // But skip 400 errors that are location-related
+                 // But only mark 400 errors if they indicate invalid API key
                  if (testResponseStatus === 401 || testResponseStatus === 403) {
                      await geminiKeyService.recordKeyError(keyId, testResponseStatus);
                  } else if (testResponseStatus === 400) {
-                     // Check if this is a location-related 400 error that should be ignored
-                     if (!shouldIgnore400Error(testResponseBody)) {
+                     // Check if this is an invalid API key 400 error that should be marked
+                     if (shouldMark400Error(testResponseBody)) {
                          await geminiKeyService.recordKeyError(keyId, testResponseStatus);
                      } else {
-                         console.log(`Skipping error marking for key ${keyId} - location not supported error.`);
+                         console.log(`Skipping error marking for key ${keyId} - 400 error not related to invalid API key.`);
                      }
                  }
             }
@@ -290,19 +288,18 @@ router.get('/gemini-models', async (req, res, next) => {
                          console.log(`Marking key ${keyId} as invalid due to ${response.status} error during model list fetch`);
                          await geminiKeyService.recordKeyError(keyId, response.status);
                      } else if (response.status === 400) {
-                         // Check if this is a location-related 400 error that should be ignored
+                         // Check if this is an invalid API key 400 error that should be marked
                          try {
                              const errorBodyJson = JSON.parse(errorBody);
-                             if (!shouldIgnore400Error(errorBodyJson)) {
+                             if (shouldMark400Error(errorBodyJson)) {
                                  console.log(`Marking key ${keyId} as invalid due to 400 error during model list fetch`);
                                  await geminiKeyService.recordKeyError(keyId, response.status);
                              } else {
-                                 console.log(`Skipping error marking for key ${keyId} during model list fetch - location not supported error.`);
+                                 console.log(`Skipping error marking for key ${keyId} during model list fetch - 400 error not related to invalid API key.`);
                              }
                          } catch (parseError) {
-                             // If we can't parse the error body, treat it as a regular 400 error
-                             console.log(`Marking key ${keyId} as invalid due to 400 error during model list fetch (unparseable response)`);
-                             await geminiKeyService.recordKeyError(keyId, response.status);
+                             // If we can't parse the error body, don't mark it as error
+                             console.log(`Skipping error marking for key ${keyId} during model list fetch - unparseable 400 response`);
                          }
                      }
 
@@ -360,6 +357,19 @@ router.delete('/error-keys', async (req, res, next) => {
             success: true,
             deletedCount: result.deletedCount,
             deletedKeys: result.deletedKeys
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.post('/clear-all-errors', async (req, res, next) => {
+    try {
+        const result = await geminiKeyService.clearAllErrorKeys();
+        res.json({
+            success: true,
+            clearedCount: result.clearedCount,
+            clearedKeys: result.clearedKeys
         });
     } catch (error) {
         next(error);

@@ -42,6 +42,7 @@ class I18n {
                 'gemini_key_batch_help': '支持批量添加：使用逗号分隔多个密钥，或每行一个密钥。',
                 'add_gemini_key': '添加 Gemini 密钥',
                 'run_all_test': '运行所有测试',
+                'ignore_all_errors': '忽略所有报错',
                 'clean_error_keys': '清理报错密钥',
                 'loading_keys': '加载密钥中...',
 
@@ -68,9 +69,12 @@ class I18n {
                 'invalid_json': '无效的 JSON 配置',
                 'vertex_config_overwrite_confirm': '检测到已存在 Vertex 配置，是否要覆盖当前配置？',
                 'clean_error_keys_confirm': '确定要删除所有带错误标记的 Gemini 密钥吗？此操作不可撤销。',
+                'ignore_all_errors_confirm': '确定要清除所有带错误标记的 Gemini 密钥的错误状态吗？密钥将保留但错误标记会被移除。',
                 'no_error_keys_found': '没有找到带错误标记的密钥。',
                 'error_keys_cleaned': '成功清理了 {0} 个报错密钥。',
+                'error_keys_ignored': '成功忽略了 {0} 个报错密钥的错误状态。',
                 'failed_to_clean_error_keys': '清理报错密钥失败：{0}',
+                'failed_to_ignore_error_keys': '忽略报错密钥失败：{0}',
                 
                 // Worker API Keys 部分
                 'add_new_worker_key': '添加新的 Worker 密钥',
@@ -213,12 +217,16 @@ class I18n {
                 'gemini_key_batch_help': 'Batch addition supported: Use commas to separate multiple keys, or one key per line.',
                 'add_gemini_key': 'Add Gemini Key',
                 'run_all_test': 'Run All Test',
+                'ignore_all_errors': 'Ignore All Errors',
                 'clean_error_keys': 'Clean Error Keys',
                 'loading_keys': 'Loading keys...',
                 'clean_error_keys_confirm': 'Are you sure you want to delete all Gemini keys with error status? This action cannot be undone.',
+                'ignore_all_errors_confirm': 'Are you sure you want to clear error status for all Gemini keys with errors? Keys will be kept but error marks will be removed.',
                 'no_error_keys_found': 'No keys with error status found.',
                 'error_keys_cleaned': 'Successfully cleaned {0} error keys.',
+                'error_keys_ignored': 'Successfully ignored error status for {0} keys.',
                 'failed_to_clean_error_keys': 'Failed to clean error keys: {0}',
+                'failed_to_ignore_error_keys': 'Failed to ignore error keys: {0}',
 
                 // Vertex AI Configuration
                 'current_vertex_config': 'Current Vertex Configuration',
