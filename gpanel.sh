@@ -271,7 +271,7 @@ install_gemini_proxy_panel() {
             echo -e "${BLUE}访问地址: http://$external_ip:$PORT${NC}"
         fi
         
-        echo -e "${GREEN}下次可以使用 'gpanel' 命令进入管理脚本${NC}"
+
     else
         echo -e "${RED}✗ 安装失败，请检查错误信息${NC}"
         echo -e "${YELLOW}容器日志:${NC}"
@@ -398,6 +398,7 @@ main() {
                 ;;
             0)
                 echo -e "${GREEN}感谢使用！${NC}"
+                echo -e "${BLUE}提示：下次可以直接使用 'gpanel' 命令进入管理脚本${NC}"
                 exit 0
                 ;;
             *)
