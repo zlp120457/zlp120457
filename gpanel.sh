@@ -335,27 +335,32 @@ main() {
                 if check_install_status > /dev/null; then
                     echo -e "${YELLOW}Gemini Proxy Panel已安装${NC}"
                     echo -n "按任意键继续..."
-                    read -n 1
+                    read -n 1 -s
+                    echo
                 else
                     install_panel
                     echo -n "按任意键继续..."
-                    read -n 1
+                    read -n 1 -s
+                    echo
                 fi
                 ;;
             2)
                 start_container
                 echo -n "按任意键继续..."
-                read -n 1
+                read -n 1 -s
+                echo
                 ;;
             3)
                 stop_container
                 echo -n "按任意键继续..."
-                read -n 1
+                read -n 1 -s
+                echo
                 ;;
             4)
                 restart_container
                 echo -n "按任意键继续..."
-                read -n 1
+                read -n 1 -s
+                echo
                 ;;
             0)
                 echo -e "${GREEN}感谢使用，再见！${NC}"
