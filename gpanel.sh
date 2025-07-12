@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Gemini Proxy Panel管理脚本
+# 版本: 1.0
+
 # 定义颜色
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -112,6 +115,18 @@ install_dependencies() {
     fi
 }
 
+# 检查Docker Compose命令
+check_docker_compose() {
+    if docker compose version &> /dev/null; then
+        DOCKER_COMPOSE_CMD="docker compose"
+    elif command -v docker-compose &> /dev/null; then
+        DOCKER_COMPOSE_CMD="docker-compose"
+    else
+        return 1
+    fi
+    return 0
+}
+
 # 安装Docker
 install_docker() {
     echo -e "${YELLOW}正在检查Docker安装状态...${NC}"
@@ -129,10 +144,26 @@ install_docker() {
     fi
     
     # 检查Docker Compose
-    if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
+    if ! check_docker_compose; then
         echo -e "${YELLOW}Docker Compose未安装，正在安装...${NC}"
-        curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-        chmod +x /usr/local/bin/docker-compose
+        
+        # 尝试安装Docker Compose插件
+        if command -v apt-get &> /dev/null; then
+            apt-get update
+            apt-get install -y docker-compose-plugin
+        elif command -v yum &> /dev/null; then
+            yum install -y docker-compose-plugin
+        elif command -v dnf &> /dev/null; then
+            dnf install -y docker-compose-plugin
+        fi
+        
+        # 如果插件安装失败，则安装独立版本
+        if ! check_docker_compose; then
+            echo -e "${YELLOW}正在安装独立版本的Docker Compose...${NC}"
+            curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+            chmod +x /usr/local/bin/docker-compose
+        fi
+        
         echo -e "${GREEN}Docker Compose安装完成${NC}"
     else
         echo -e "${GREEN}Docker Compose已安装${NC}"
@@ -205,6 +236,12 @@ install_gemini_proxy_panel() {
     # 安装Docker
     install_docker
     
+    # 检查Docker Compose命令
+    if ! check_docker_compose; then
+        echo -e "${RED}错误：Docker Compose未正确安装${NC}"
+        return 1
+    fi
+    
     # 创建安装目录
     mkdir -p "$INSTALL_DIR"
     cd "$INSTALL_DIR"
@@ -217,7 +254,7 @@ install_gemini_proxy_panel() {
     
     # 启动容器
     echo -e "${YELLOW}正在启动容器...${NC}"
-    docker-compose up -d
+    $DOCKER_COMPOSE_CMD up -d
     
     # 等待容器启动
     sleep 5
@@ -237,6 +274,8 @@ install_gemini_proxy_panel() {
         echo -e "${GREEN}下次可以使用 'gpanel' 命令进入管理脚本${NC}"
     else
         echo -e "${RED}✗ 安装失败，请检查错误信息${NC}"
+        echo -e "${YELLOW}容器日志:${NC}"
+        $DOCKER_COMPOSE_CMD logs
     fi
 }
 
@@ -245,12 +284,16 @@ start_container() {
     if [ "$INSTALLED" = true ]; then
         echo -e "${YELLOW}正在启动容器...${NC}"
         cd "$INSTALL_DIR"
-        docker-compose up -d
-        sleep 3
-        if docker ps | grep -q "gemini-proxy-panel"; then
-            echo -e "${GREEN}✓ 容器启动成功${NC}"
+        if check_docker_compose; then
+            $DOCKER_COMPOSE_CMD up -d
+            sleep 3
+            if docker ps | grep -q "gemini-proxy-panel"; then
+                echo -e "${GREEN}✓ 容器启动成功${NC}"
+            else
+                echo -e "${RED}✗ 容器启动失败${NC}"
+            fi
         else
-            echo -e "${RED}✗ 容器启动失败${NC}"
+            echo -e "${RED}Docker Compose未找到${NC}"
         fi
     else
         echo -e "${RED}请先安装Gemini Proxy Panel${NC}"
@@ -262,8 +305,12 @@ stop_container() {
     if [ "$INSTALLED" = true ]; then
         echo -e "${YELLOW}正在停止容器...${NC}"
         cd "$INSTALL_DIR"
-        docker-compose down
-        echo -e "${GREEN}✓ 容器已停止${NC}"
+        if check_docker_compose; then
+            $DOCKER_COMPOSE_CMD down
+            echo -e "${GREEN}✓ 容器已停止${NC}"
+        else
+            echo -e "${RED}Docker Compose未找到${NC}"
+        fi
     else
         echo -e "${RED}请先安装Gemini Proxy Panel${NC}"
     fi
@@ -274,12 +321,16 @@ restart_container() {
     if [ "$INSTALLED" = true ]; then
         echo -e "${YELLOW}正在重启容器...${NC}"
         cd "$INSTALL_DIR"
-        docker-compose restart
-        sleep 3
-        if docker ps | grep -q "gemini-proxy-panel"; then
-            echo -e "${GREEN}✓ 容器重启成功${NC}"
+        if check_docker_compose; then
+            $DOCKER_COMPOSE_CMD restart
+            sleep 3
+            if docker ps | grep -q "gemini-proxy-panel"; then
+                echo -e "${GREEN}✓ 容器重启成功${NC}"
+            else
+                echo -e "${RED}✗ 容器重启失败${NC}"
+            fi
         else
-            echo -e "${RED}✗ 容器重启失败${NC}"
+            echo -e "${RED}Docker Compose未找到${NC}"
         fi
     else
         echo -e "${RED}请先安装Gemini Proxy Panel${NC}"
