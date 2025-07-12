@@ -315,7 +315,7 @@ show_menu() {
     echo "3. 停止 Gemini Proxy Panel 容器"
     echo "4. 重启 Gemini Proxy Panel 容器"
     echo "0. 退出"
-    echo -e "${CYAN}请输入选项 [0-4]:${NC}"
+    echo -e "${CYAN}请输入选项 [0-4]: ${NC}"
 }
 
 # 主函数
@@ -328,7 +328,8 @@ main() {
         show_status
         show_menu
         
-        read -r choice
+        read -n 1 -r choice
+        echo # read -n 1 不会换行，手动添加换行
         
         case $choice in
             1)
