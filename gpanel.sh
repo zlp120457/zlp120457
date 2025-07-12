@@ -175,7 +175,7 @@ create_env_file() {
     echo -e "${YELLOW}正在创建配置文件...${NC}"
     
     echo -n "请输入管理密码: "
-    read -s ADMIN_PASSWORD
+    read ADMIN_PASSWORD
     echo ""
     
     cat > "$INSTALL_DIR/.env" << EOF
