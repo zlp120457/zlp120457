@@ -18,7 +18,7 @@
      ![](image/3.0.jpg)
    * 选择`Existing Image`，在`Image URL`中填写项目的镜像。
      ```
-     dreamhartley705/gemini-proxy-panel:latest
+     dreamhartley705/jimihub:latest
      ```
      ![](image/4.0.jpg)
    * 点击`Connect`，在`Name`中填写一个自定义容器的名称，这个名称将会是访问URL的一部分，**不建议使用默认**，请自行填写。在下方选择容器的区域，推荐使用美国(US)区域。

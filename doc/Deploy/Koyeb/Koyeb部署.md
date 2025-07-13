@@ -17,7 +17,7 @@
      ![](image/1.1.jpg)
    * 进入主界面后，在右侧选择Docker容器部署。
      ![](image/2.0.jpg)
-   * 在Image选项填写`dreamhartley705/gemini-proxy-panel:latest`，点击下一步。
+   * 在Image选项填写`dreamhartley705/jimihub:latest`，点击下一步。
      ![](image/2.1.jpg)
    * 在配置选择界面，选择`CPU Eco`，并选择一个免费的容器类型，点击下一步。
      ![](image/2.2.jpg)

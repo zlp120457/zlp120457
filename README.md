@@ -1,4 +1,4 @@
-# Gemini Proxy Panel
+# JimiHub
 
 > **本项目遵循CC BY-NC 4.0协议，禁止任何形式的商业倒卖行为。**  
 This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0).  
@@ -8,7 +8,7 @@ Commercial resale or any form of commercial use is prohibited.
 [***详细部署与使用文档(新手看这里)***](./doc/项目介绍.md "项目介绍") <br><br>
 ## Introduction
 
-`gemini-proxy-panel` is a proxy service. It forwards requests formatted for the OpenAI API to the Google Gemini Pro API, allowing applications developed for OpenAI to seamlessly switch to or leverage the capabilities of Gemini models.
+`JimiHub` is a proxy service. It forwards requests formatted for the OpenAI API to the Google Gemini Pro API, allowing applications developed for OpenAI to seamlessly switch to or leverage the capabilities of Gemini models.
 
 ## Features
 
@@ -127,21 +127,21 @@ You can quickly deploy using Docker or Docker Compose.
 3. **Build the Docker Image**:
     
     ```bash
-    docker build -t gemini-proxy-panel .
+    docker build -t gemhub .
     ```
 
 4. **Run the Docker Container**:
     
     ```bash
-    docker run -d --name gemini-proxy-panel \
+    docker run -d --name gemhub \
       -p 3000:3000 \
       --env-file .env \
       -v ./data:/usr/src/app/data \
-      gemini-proxy-panel
+      gemhub
     ```
     
     * `-d`: Run the container in the background.
-    * `--name gemini-proxy-panel`: Name for the container.
+    * `--name gemhub`: Name for the container.
     * `-p 3000:3000`: Map host port 3000 to container port 3000.
     * `--env-file .env`: Load environment variables from the `.env` file.
     * `-v ./data:/usr/src/app/data`: Mount the local `data` directory to the container for SQLite database persistence. Ensure the `data` directory exists locally.

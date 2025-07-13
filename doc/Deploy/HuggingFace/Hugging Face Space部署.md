@@ -43,7 +43,7 @@
    * 将文件名设置为 `Dockerfile`。
    * 将以下内容粘贴到文件中：
      ```dockerfile
-     FROM dreamhartley705/gemini-proxy-panel:huggingface
+     FROM dreamhartley705/jimihub:huggingface
      ```
      或Fork仓库创建的镜像地址
      
