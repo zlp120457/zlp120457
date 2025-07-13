@@ -53,7 +53,7 @@ This deployment method utilizes Hugging Face Space's Docker environment and **re
    * Set the filename to `Dockerfile`.
    * Paste the following content into the file:
      ```dockerfile
-     FROM dreamhartley705/gemini-proxy-panel:huggingface
+     FROM dreamhartley705/jimihub:huggingface
      ```
    * Click "Commit new file".
 
