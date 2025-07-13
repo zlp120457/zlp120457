@@ -3,8 +3,8 @@
 由于本项目在Hugging Face Space中部署较多，疑似被官方封禁，直接拉取项目镜像可能会导致部署失败或Space被停用，如果您在使用中遇到类似的问题，请参考以下的步骤Fork项目并创建自己的镜像：
 
 1. **创建GitHub仓库Fork**
-   - 访问 [dreamhartley/gemini-proxy-panel](https://github.com/dreamhartley/gemini-proxy-panel)
-   - 创建Fork时确保使用自定义的仓库名称，**不要包含** `gemini proxy panel`或`hajimi`等关键词
+   - 创建Fork [dreamhartley/JimiHub](https://github.com/dreamhartley/JimiHub/fork)
+   - 确保使用自定义的仓库名称，**不要包含** `JimiHub`或`hajimi`等关键词
 
 2. **启用工作流**
    - 在上方Actions标签栏，点击`I understand my workflows, go ahead and enable them`按钮
