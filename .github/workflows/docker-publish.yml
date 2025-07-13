@@ -26,11 +26,15 @@ jobs:
         id: string
         run: echo "REPO_OWNER_LC=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
+      - name: Convert repo name to lowercase
+        id: repo_name
+        run: echo "REPO_NAME_LC=$(echo ${{ github.event.repository.name }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ env.REPO_OWNER_LC }}/${{ github.event.repository.name }}
+          images: ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.REPO_NAME_LC }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -38,5 +42,5 @@ jobs:
           context: .
           file: ./Dockerfile.huggingface
           push: true
-          tags: ghcr.io/${{ env.REPO_OWNER_LC }}/${{ github.event.repository.name }}:latest
+          tags: ghcr.io/${{ env.REPO_OWNER_LC }}/${{ env.REPO_NAME_LC }}:latest
           labels: ${{ steps.meta.outputs.labels }}
