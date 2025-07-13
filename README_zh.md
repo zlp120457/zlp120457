@@ -44,7 +44,7 @@
    * 将文件名设置为 `Dockerfile`。
    * 将以下内容粘贴到文件中：
      ```dockerfile
-     FROM dreamhartley705/gemini-proxy-panel:huggingface
+     FROM dreamhartley705/jimihub:huggingface
      ```
    * 点击 "Commit new file"。
 5. **启动和访问**:
@@ -62,8 +62,8 @@
 1. **克隆仓库**:
     
     ```bash
-    git clone https://github.com/dreamhartley/gemini-proxy-panel.git
-    cd gemini-proxy-panel
+    git clone https://github.com/dreamhartley/JimiHub.git
+    cd JimiHub
     ```
 2. **安装依赖**:
     
@@ -101,8 +101,8 @@
 1. **克隆仓库**:
     
     ```bash
-    git clone https://github.com/dreamhartley/gemini-proxy-panel.git
-    cd gemini-proxy-panel
+    git clone https://github.com/dreamhartley/JimiHub.git
+    cd JimiHub
     ```
 2. **配置环境变量**:
     
@@ -137,8 +137,8 @@
 1. **克隆仓库**:
    
    ```bash
-   git clone https://github.com/dreamhartley/gemini-proxy-panel.git
-   cd gemini-proxy-panel
+   git clone https://github.com/dreamhartley/JimiHub.git
+   cd JimiHub
    ```
 2. **配置环境变量**:
    

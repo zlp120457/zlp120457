@@ -112,8 +112,8 @@ You can quickly deploy using Docker or Docker Compose.
 1. **Clone the Repository**:
     
     ```bash
-    git clone https://github.com/dreamhartley/gemini-proxy-panel.git
-    cd gemini-proxy-panel
+    git clone https://github.com/dreamhartley/JimiHub.git
+    cd JimiHub
     ```
 
 2. **Configure Environment Variables**:
@@ -151,8 +151,8 @@ You can quickly deploy using Docker or Docker Compose.
 1. **Clone the Repository**:
    
    ```bash
-   git clone https://github.com/dreamhartley/gemini-proxy-panel.git
-   cd gemini-proxy-panel
+   git clone https://github.com/dreamhartley/JimiHub.git
+   cd JimiHub
    ```
 
 2. **Configure Environment Variables**:
@@ -212,7 +212,3 @@ These deployment methods configure environment variables through the `.env` file
   * `GITHUB_PROJECT_PAT`: GitHub Personal Access Token with `repo` permission.
   * `GITHUB_ENCRYPT_KEY`: Key for encrypting synced data (at least 32 characters).
 
-
-<a href="https://dartnode.com" title="Powered by DartNode - Free VPS for Open Source">
-  <img src="https://dartnode.com/branding/DN-Open-Source-sm.png" alt="Powered by DartNode" width="300">
-</a>
