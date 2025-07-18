@@ -221,7 +221,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./data:/usr/src/app/data
+      - ./data:/app/data
     restart: unless-stopped
 EOF
 }
