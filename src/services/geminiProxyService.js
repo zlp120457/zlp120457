@@ -122,8 +122,8 @@ async function proxyChatCompletions(openAIRequestBody, workerApiKey, stream, thi
 
                 console.log(`Attempt ${attempt}: Proxying request for model: ${requestedModelId}, Category: ${modelCategory}, KeyID: ${selectedKey.id}, Safety: ${isSafetyEnabled}`);
 
-                // 3. Transform Request Body (remains the same)
-                const { contents, systemInstruction, tools: geminiTools } = transformUtils.transformOpenAiToGemini(
+                // 3. Transform Request Body (includes tool_choice support)
+                const { contents, systemInstruction, tools: geminiTools, toolConfig } = transformUtils.transformOpenAiToGemini(
                     openAIRequestBody,
                     requestedModelId,
                     isSafetyEnabled // Pass safety setting to transformer
@@ -143,6 +143,7 @@ async function proxyChatCompletions(openAIRequestBody, workerApiKey, stream, thi
                         ...(thinkingBudget !== undefined && { thinkingConfig: { thinkingBudget: thinkingBudget } }),
                     },
                     ...(geminiTools && { tools: geminiTools }),
+                    ...(toolConfig && { toolConfig: toolConfig }),
                     ...(systemInstruction && { systemInstruction: systemInstruction }),
                 };
 
